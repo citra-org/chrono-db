@@ -1,9 +1,14 @@
-use std::fs::{OpenOptions};
-use std::io::{self, Write, Read, Seek, SeekFrom};
+use std::io::{Write};
 use chrono::prelude::*;
 use serde::{Serialize, Deserialize};
-use bincode;
-use crate::helper::crypto;
+use crate::helper::crypto::read_key;
+use std::fs::OpenOptions;
+use aes::Aes256;
+use rand::Rng;
+use block_modes::{Cbc};
+use block_modes::block_padding::Pkcs7;
+use block_modes::BlockMode;
+type Aes256Cbc = Cbc<Aes256, Pkcs7>;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DataRecord {
@@ -20,33 +25,34 @@ impl DataRecord {
             body,
         }
     }
+
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let mut bytes = vec![];
+        bytes.extend(self.time.to_rfc3339().as_bytes());
+        bytes.extend(&[b' ']);
+        bytes.extend(self.headers.as_bytes());
+        bytes.extend(&[b' ']);
+        bytes.extend(self.body.as_bytes());
+        bytes
+    }
 }
 
-pub fn write_record(filename: &str, headers: String, body: String, key: &[u8; 32]) -> io::Result<()> {
+pub fn write_record(headers: String, body: String) -> Result<(), Box<dyn std::error::Error>> {
+    let key = read_key()?;
+    let iv: [u8; 16] = rand::thread_rng().gen();
+    let cipher = Aes256Cbc::new_from_slices(&key, &iv)?;
     let record = DataRecord::new(headers, body);
+    let mut plaintext = record.as_bytes();
+    plaintext.push(b'\n'); 
+    let ciphertext = cipher.encrypt_vec(&plaintext);
+
     let mut file = OpenOptions::new()
-        .read(true)
         .write(true)
-        .create(true)
-        .open(filename)?;
+        .append(true)
+        .open("sample.itlg")?;
 
-    let encoded: Vec<u8> = bincode::serialize(&record).unwrap();
-    let encrypted = crypto::encrypt(&encoded, key);
-    let new_record = (encrypted.len() as u32).to_be_bytes().to_vec();
-    let new_record = [new_record, encrypted].concat();
-
-    // Read existing content
-    let mut existing_content = Vec::new();
-    file.read_to_end(&mut existing_content)?;
-
-    // Move file cursor to the beginning
-    file.seek(SeekFrom::Start(0))?;
-
-    // Write new record followed by existing content
-    file.write_all(&new_record)?;
-    file.write_all(&existing_content)?;
-    file.set_len(new_record.len() as u64 + existing_content.len() as u64)?;
-    file.flush()?;
+    file.write_all(&iv)?;
+    file.write_all(&ciphertext)?;
 
     Ok(())
 }

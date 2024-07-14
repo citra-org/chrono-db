@@ -1,9 +1,12 @@
 use std::fs::File;
-use std::io::{self, BufReader, Read, Seek, SeekFrom};
+use std::io::{Read};
 use chrono::prelude::*;
 use serde::{Serialize, Deserialize};
-use bincode;
-use crate::helper::crypto;
+use crate::helper::crypto::read_key; 
+use aes::Aes256;
+use block_modes::{BlockMode, Cbc};
+use block_modes::block_padding::Pkcs7;
+type Aes256Cbc = Cbc<Aes256, Pkcs7>;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DataRecord {
@@ -11,33 +14,45 @@ pub struct DataRecord {
     pub headers: String,
     pub body: String,
 }
-
-pub fn read_records(filename: &str, key: &[u8; 32]) -> io::Result<()> {
-    let mut file = File::open(filename)?;
-    let file_len = file.metadata()?.len();
-    let mut position = 0;
-
-    while position < file_len {
-        file.seek(SeekFrom::Start(position))?;
-        let mut reader = BufReader::new(&file);
-        let mut size_buffer = [0u8; 4];
-
-        reader.read_exact(&mut size_buffer)?;
-        let size = u32::from_be_bytes(size_buffer) as usize;
-
-        let mut encrypted_buffer = vec![0u8; size];
-        reader.read_exact(&mut encrypted_buffer)?;
-
-        if let Some(decrypted) = crypto::decrypt(&encrypted_buffer, key) {
-            match bincode::deserialize::<DataRecord>(&decrypted) {
-                Ok(record) => println!("{:?}", record),
-                Err(e) => eprintln!("Error deserializing record: {}", e),
-            }
-        } else {
-            eprintln!("Error decrypting record");
+impl DataRecord {
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
+        let parts: Vec<&[u8]> = bytes.splitn(3, |&b| b == b' ').collect();
+        if parts.len() != 3 {
+            return Err("Invalid record format".into());
         }
 
-        position += 4 + size as u64;
+        let time_str = std::str::from_utf8(parts[0])?;
+        let time = DateTime::parse_from_rfc3339(time_str)?.with_timezone(&Utc);
+        let headers = String::from_utf8(parts[1].to_vec())?;
+        let body = String::from_utf8(parts[2].to_vec())?;
+
+        Ok(Self { time, headers, body })
+    }
+}
+
+pub fn read_records() -> Result<(), Box<dyn std::error::Error>> {
+    let key = read_key()?;
+    let mut file = File::open("sample.itlg")?;
+    let mut iv = [0u8; 16];
+    file.read_exact(&mut iv)?;
+    let mut ciphertext = Vec::new();
+    file.read_to_end(&mut ciphertext)?;
+
+    let cipher = Aes256Cbc::new_from_slices(&key, &iv)?;
+    let decrypted_bytes = cipher.decrypt_vec(&ciphertext)?;
+
+    let records: Vec<DataRecord> = decrypted_bytes
+        .split(|&b| b == b'\n')
+        .filter(|&record| !record.is_empty())
+        .map(DataRecord::from_bytes)
+        .collect::<Result<_, _>>()?;
+
+    for (i, record) in records.iter().enumerate() {
+        println!("Decrypted Record {}:", i + 1);
+        println!("Time: {}", record.time);
+        println!("Headers: {}", record.headers);
+        println!("Body: {}", record.body);
+        println!();
     }
 
     Ok(())

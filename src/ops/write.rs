@@ -4,9 +4,8 @@ use crate::helper::crypto::read_key;
 use std::fs::OpenOptions;
 use aes::Aes256;
 use rand::Rng;
-use block_modes::{Cbc};
+use block_modes::{BlockMode, Cbc};
 use block_modes::block_padding::Pkcs7;
-use block_modes::BlockMode;
 
 type Aes256Cbc = Cbc<Aes256, Pkcs7>;
 
@@ -30,7 +29,5 @@ pub fn write_record(headers: String, body: String) -> Result<(), Box<dyn std::er
 
     file.write_all(&iv)?;
     file.write_all(&ciphertext)?;
-    file.write_all(b"\n")?;
-
     Ok(())
 }

@@ -8,12 +8,19 @@ Database for IntelliLog Open Source Project
 
 ### Usage
 - ```cargo build``` for building
-- ```cargo run write myFileName "header" "body"``` for writing into itlg db
-- ```cargo run read myFileName``` for reading itlg db
+- ```cargo run <db name> c``` for creating db
+- ```cargo run <db name> w "header" "body"``` for writing
+- ```cargo run <db name> r``` for reading
 
 ### Note
 - Data Format ```TIME HEADER BODY```
 - The project is still under development, The above are subjected to change
+
+### TO DO
+- Encryption & Decryption of file
+- Read filters & queries
+- Validation for write
+- etc for later
 
 ### Contributors
 

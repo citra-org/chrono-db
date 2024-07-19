@@ -20,19 +20,24 @@ pub fn write_record(file_path: &str, records: Vec<(String, String)>) -> Result<(
         let handle = thread::spawn(move || {
             let start = i * records_per_thread;
             let end = std::cmp::min((i + 1) * records_per_thread, records.len());
+            
+            if start >= records.len() {
+                return Ok(());
+            }
+            
             let file = OpenOptions::new()
-            .append(true)
-            .open(&*file_path)
-            .map_err(|e| Error::new(ErrorKind::PermissionDenied, format!("Failed to open file: {}", e)))?;
+                .append(true)
+                .open(&*file_path)
+                .map_err(|e| Error::new(ErrorKind::PermissionDenied, format!("Failed to open file: {}", e)))?;
             let mut buf_writer = BufWriter::with_capacity(8192, file);
             for (header, body) in records[start..end].iter() {
                 let time = Utc::now();
                 let combined = format!("{} {} {}\n", time, body, header);
                 buf_writer.write_all(combined.as_bytes())
-                .map_err(|e| Error::new(ErrorKind::WriteZero, format!("Failed to write data into file: {}", e)))?;
+                    .map_err(|e| Error::new(ErrorKind::WriteZero, format!("Failed to write data into file: {}", e)))?;
             }
             buf_writer.flush()
-            .map_err(|e| Error::new(ErrorKind::WriteZero, format!("Failed to flush buffer: {}", e)))?;
+                .map_err(|e| Error::new(ErrorKind::WriteZero, format!("Failed to flush buffer: {}", e)))?;
             Ok(())
         });
         handles.push(handle);
@@ -46,7 +51,7 @@ pub fn write_record(file_path: &str, records: Vec<(String, String)>) -> Result<(
     
     let duration = start_time.elapsed();
 
-    println!("CPU's: {}",num_cpus);
+    println!("CPU's: {}", num_cpus);
     println!("Time taken: {:?}", duration);
     println!("Records written: {}", records.len());
     println!("Write speed: {} records/second", records.len() as f64 / duration.as_secs_f64());

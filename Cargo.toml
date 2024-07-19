@@ -9,3 +9,5 @@ block-modes = "0.8.1"
 rand = "0.8.5"
 base64 = "0.13.0"
 chrono = "0.4"
+tokio = { version = "1", features = ["full"] }
+rayon = "1.7"

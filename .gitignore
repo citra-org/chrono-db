@@ -3,3 +3,6 @@ Cargo.lock
 **.itlg
 **.itlgs
 test
+check.py
+check.sh
+result.txt

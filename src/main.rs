@@ -1,24 +1,14 @@
-use std::env;
+mod ops;
+mod server;
+mod connection;
 
-mod ops {
-    pub mod read;
-    pub mod write;
-    pub mod create;
+use connection::parse_itlg_url;
+
+fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let connection_string = "itlg://admin:admin@127.0.0.1:3141/database";
+    let conn_info = parse_itlg_url(connection_string)?;
+    
+    println!("Starting server on {}:{}", conn_info.host, conn_info.port);
+    server::run_server(&conn_info.host, conn_info.port)
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = env::args().collect();
-
-    let file_name = &format!("{}.itlg", args[1]);
-
-    match args[2].as_str() {
-        "c" => ops::create::create_record(file_name)?,
-        "w" => ops::write::write_record(file_name, args[3..].chunks(2).map(|chunk| (chunk[0].clone(), chunk[1].clone())).collect::<Vec<_>>())?,
-        "r" => ops::read::read_records(file_name)?,
-        _ => {
-            eprintln!("Unknown command: {}", args[2]);
-        }
-    }
-
-    Ok(())
-}

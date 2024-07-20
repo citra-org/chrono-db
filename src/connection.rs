@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 use url::Url;
+use std::fs::File;
+use std::io::{self, BufRead};
+use std::path::Path;
 
 #[allow(dead_code)]
 pub struct ConnectionInfo {
@@ -35,4 +38,20 @@ pub fn parse_itlg_url(url: &str) -> Result<ConnectionInfo, Box<dyn std::error::E
         database,
         options,
     })
+}
+
+pub fn validate_credentials(username: &str, password: &str) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+    let path = Path::new("config.txt");
+    let file = File::open(&path)?;
+
+    let lines = io::BufReader::new(file).lines();
+    for line in lines {
+        let line = line?;
+        let parts: Vec<&str> = line.split(':').collect();
+        if parts.len() == 2 && parts[0] == username && parts[1] == password {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
 }

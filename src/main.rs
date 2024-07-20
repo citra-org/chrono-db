@@ -11,4 +11,3 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("Starting server on {}:{}", conn_info.host, conn_info.port);
     server::run_server(&conn_info.host, conn_info.port)
 }
-

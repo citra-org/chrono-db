@@ -5,4 +5,4 @@ Cargo.lock
 test
 check.py
 check.sh
-result.txt
+*.txt

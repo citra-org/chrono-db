@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match args[2].as_str() {
         "c" => ops::create::create_record(file_name)?,
-        "w" => ops::write::write_record(file_name, args[3..].chunks(2).map(|chunk| (chunk[0].clone(), chunk[1].clone())).collect::<Vec<_>>())?,
+        "w" => ops::write::write_record2(file_name, args[3..].chunks(2).map(|chunk| (chunk[0].clone(), chunk[1].clone())).collect::<Vec<_>>())?,
         "r" => ops::read::read_records(file_name)?,
         _ => {
             eprintln!("Unknown command: {}", args[2]);

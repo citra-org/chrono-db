@@ -1,8 +1,9 @@
-use std::collections::HashMap;
 use url::Url;
 use std::fs::File;
 use std::io::{self, BufRead};
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::collections::HashMap;
+use std::error::Error;
 
 #[allow(dead_code)]
 pub struct ConnectionInfo {
@@ -40,9 +41,22 @@ pub fn parse_itlg_url(url: &str) -> Result<ConnectionInfo, Box<dyn std::error::E
     })
 }
 
-pub fn validate_credentials(username: &str, password: &str) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
-    let path = Path::new("config.txt");
-    let file = File::open(&path)?;
+
+const CONFIG_FILE_PATH: &str = "~/.itlg/config";
+
+fn expand_tilde(path: &str) -> PathBuf {
+    if path.starts_with("~/") {
+        let home = std::env::var("HOME").unwrap();
+        let path = path.strip_prefix("~/").unwrap();
+        Path::new(&home).join(path)
+    } else {
+        PathBuf::from(path)
+    }
+}
+
+pub fn validate_credentials(username: &str, password: &str) -> Result<bool, Box<dyn Error + Send + Sync>> {
+    let config_path = expand_tilde(CONFIG_FILE_PATH);
+    let file = File::open(&config_path)?;
 
     let lines = io::BufReader::new(file).lines();
     for line in lines {

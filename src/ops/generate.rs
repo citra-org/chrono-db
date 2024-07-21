@@ -1,5 +1,5 @@
-use std::fs::{self, File};
-use std::io::{self, ErrorKind};
+use std::fs::{self};
+use std::io::ErrorKind;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::error::Error;

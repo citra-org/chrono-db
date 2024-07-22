@@ -1,9 +1,8 @@
 use url::Url;
 use std::fs::File;
-use std::io::{self, BufRead};
+use std::io::{ErrorKind, Error, BufRead,BufReader};
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
-use std::error::Error;
 
 #[allow(dead_code)]
 pub struct ConnectionInfo {
@@ -19,7 +18,7 @@ pub fn parse_itlg_url(url: &str) -> Result<ConnectionInfo, Box<dyn std::error::E
     let parsed_url = Url::parse(url)?;
 
     if parsed_url.scheme() != "itlg" {
-        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid scheme. Expected 'itlg'")));
+        return Err(Box::new(Error::new(ErrorKind::InvalidInput, "Invalid scheme. Expected 'itlg'")));
     }
 
     let host = parsed_url.host_str().ok_or("No host specified")?.to_string();
@@ -54,11 +53,11 @@ fn expand_tilde(path: &str) -> PathBuf {
     }
 }
 
-pub fn validate_credentials(username: &str, password: &str) -> Result<bool, Box<dyn Error + Send + Sync>> {
+pub fn validate_credentials(username: &str, password: &str) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
     let config_path = expand_tilde(CONFIG_FILE_PATH);
     let file = File::open(&config_path)?;
 
-    let lines = io::BufReader::new(file).lines();
+    let lines = BufReader::new(file).lines();
     for line in lines {
         let line = line?;
         let parts: Vec<&str> = line.split(':').collect();

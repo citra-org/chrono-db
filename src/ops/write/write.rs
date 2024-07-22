@@ -1,56 +1,78 @@
-use std::io::{BufWriter, Write};
+use std::io::{Error,ErrorKind, BufWriter, Write};
 use std::fs::OpenOptions;
 use std::sync::Arc;
 use std::time::Instant;
 use chrono::Utc;
 use std::thread;
 use num_cpus;
+use crate::managers;
 
-pub fn write_record(file_path: &str, records: Vec<(String, String)>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+pub fn write_events(chrono: &str, stream: &str, events: Vec<(String, String)>) -> Result<(), Error> {
+    if let Err(e) = managers::folders::check::check_folder(chrono) {
+        eprintln!("Failed to check folder: {}", e);
+        return Err(Error::new(ErrorKind::Other, "Failed to check folder"));
+    }
+    
+    if let Err(e) = managers::files::check::check_file(stream) {
+        eprintln!("Failed to check file: {}", e);
+        return Err(Error::new(ErrorKind::Other, "Failed to check file"));
+    }
+    
     let start_time = Instant::now();
-    let file_path = Arc::new(file_path.to_string());
-    let records = Arc::new(records);
+    let file_path = Arc::new(stream.to_string());
+    let events = Arc::new(events);
     let num_cpus = num_cpus::get();
-    let records_per_thread = (records.len() + num_cpus - 1) / num_cpus;
+    let events_per_thread = (events.len() + num_cpus - 1) / num_cpus;
     
     let mut handles = vec![];
     for i in 0..num_cpus {
         let file_path = file_path.clone();
-        let records = records.clone();
-        let handle = thread::spawn(move || -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-            let start = i * records_per_thread;
-            let end = std::cmp::min((i + 1) * records_per_thread, records.len());
+        let events = events.clone();
+        let handle = thread::spawn(move || -> Result<(), Error> {
+            let start = i * events_per_thread;
+            let end = std::cmp::min((i + 1) * events_per_thread, events.len());
             
-            if start >= records.len() {
+            if start >= events.len() {
                 return Ok(());
             }
             
-            let file = OpenOptions::new()
+            let file = match OpenOptions::new()
                 .append(true)
-                .open(&*file_path)
-                .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+                .open(&*file_path) {
+                Ok(f) => f,
+                Err(e) => {
+                    eprintln!("Failed to open file: {:?}", e);
+                    return Err(e);
+                }
+            };
             let mut buf_writer = BufWriter::with_capacity(8192, file);
-            for (header, body) in records[start..end].iter() {
+            for (header, body) in events[start..end].iter() {
                 let time = Utc::now();
                 let combined = format!("{} {} {}\n", time, body, header);
-                buf_writer.write_all(combined.as_bytes())
-                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+                if let Err(e) = buf_writer.write_all(combined.as_bytes()) {
+                    eprintln!("Failed to write to buffer: {:?}", e);
+                    return Err(e);
+                }
             }
-            buf_writer.flush()
-                .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+            if let Err(e) = buf_writer.flush() {
+                eprintln!("Failed to flush buffer: {:?}", e);
+                return Err(e);
+            }
             Ok(())
         });
         handles.push(handle);
     }
     
     for handle in handles {
-        handle.join().unwrap()?;
+        if let Err(e) = handle.join().unwrap() {
+            return Err(e);
+        }
     }
     
     let duration = start_time.elapsed();
     println!("CPU's: {}", num_cpus);
     println!("Time taken: {:?}", duration);
-    println!("Records written: {}", records.len());
-    println!("Write speed: {} records/second", records.len() as f64 / duration.as_secs_f64());
+    println!("Events written: {}", events.len());
+    println!("Write speed: {} events/second", events.len() as f64 / duration.as_secs_f64());
     Ok(())
 }

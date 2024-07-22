@@ -1,20 +1,20 @@
 use std::fs::File;
-use std::io::{self, BufRead};
+use std::io::{BufRead, BufReader, Error};
 
-pub fn read_records(file_path: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let file = File::open(file_path)?;
-    let reader = io::BufReader::new(file);
-    let mut result = String::new();
-    for line in reader.lines() {
+pub fn read_events(stream: &str) -> Result<String, Error> {
+    let file = File::open(stream)?;
+    let streamer = BufReader::new(file);
+    let mut events = String::new();
+    for line in streamer.lines() {
         let line = line?;
         let mut parts = line.splitn(3, ' ');
-        if let (Some(time_str), Some(body), Some(headers)) = (parts.next(), parts.next(), parts.next()) {
-            result.push_str(&format!("{} {} {}&/n", time_str, body, headers));
-            //TODO: fix this to send lines insted of lines as string
+        if let (Some(stamp), Some(tag), Some(entry)) = (parts.next(), parts.next(), parts.next()) {
+            events.push_str(&format!("{} {} {}\n", stamp, tag, entry));
+            //TODO: fix this to send lines instead of lines as string
         } else {
-            result.push_str(&format!("Malformed record: {}\n", line));
+            events.push_str(&format!("Malformed event: {}\n", line));
         }
     }
-    println!("hgehehhehe {}",result);
-    Ok(result)
+    println!("hgehehhehe {}", events);
+    Ok(events)
 }

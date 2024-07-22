@@ -1,5 +1,5 @@
 use std::net::{TcpListener, TcpStream};
-use std::io::{Read, Write};
+use std::io::{Read, Write,Error,ErrorKind};
 use crate::ops;
 use crate::connection::validate_credentials;
 
@@ -69,39 +69,20 @@ fn handle_client(mut stream: TcpStream) -> Result<(), Box<dyn std::error::Error 
             stream.write_all(response_str.as_bytes())?;
             continue;
         }
-
-        let response = match parts[0] {
-            "e" => {
-                println!("Ending connection with client.");
-                break;
-            },
-            "ck" => ops::create::keeper::create_keeper(Some(parts[2])),
-            "cc" => ops::create::chrono::create_chrono(Some(parts[2])),
-            "cs" => ops::create::stream::create_stream(Some(parts[2])),
-            "w" => {
-                println!("writing..");
-                let chunks: Vec<(String, String)> = parts[1..].chunks(2)
-                    .map(|chunk| (chunk[0].to_string(), chunk[1].to_string()))
-                    .collect();
-                ops::write::write::write_record("hehe.itlg", chunks).map(|_| "Record written".to_string())
-            }
-            "r" => {
-                println!("reading..");
-                ops::read::read::read_records("hehe.itlg").map(|data| format!("{}", data))
-            }
-            _ => Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
+        let response: Result<String,Error> = match parts[0] {
+            "e" => { println!("Ending connection with client."); Ok("Connection ended".to_string()) },
+            "ck" => ops::create::keeper::create_keeper(Some(parts[2])).map(|_| "Keeper created".to_string()),
+            "cc" => ops::create::chrono::create_chrono(Some(parts[2])).map(|_| "Chrono created".to_string()),
+            "cs" => ops::create::stream::create_stream(Some(parts[2])).map(|_| "Stream created".to_string()),
+            "w" => ops::write::write::write_events("chrono", "stream", parts[1..].chunks(2).map(|chunk| (chunk[0].to_string(), chunk[1].to_string())).collect()).map(|_| "Events written".to_string()),
+            "r" => ops::read::read::read_events("hehe.itlg").map(|events| format!("Read events: {:?}", events)),
+            _ => Err(Error::new(
+                ErrorKind::InvalidInput,
                 format!("Unknown command: {}", parts[0])
-            )) as Box<dyn std::error::Error + Send + Sync>),
+            )),
         };
-
-        let response_str = match response {
-            Ok(data) => format!("{}", data),
-            Err(e) => format!("Error: {}", e),
-        };
-
+        
+        let response_str = response.map_or_else(|e| format!("Error: {}", e), |data| data);
         stream.write_all(response_str.as_bytes())?;
     }
-
-    Ok(())
 }

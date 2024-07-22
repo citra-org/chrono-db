@@ -1,5 +1,4 @@
-use intellilog_database::managers;
-use intellilog_database::server;
+use intellilog_database::{managers,server};
 
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let connection_string = "itlg://admin:z1yehwtqlm1T7oPr@127.0.0.1:3141/database";

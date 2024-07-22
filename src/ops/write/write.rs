@@ -2,10 +2,10 @@ use std::io::{Error,ErrorKind, BufWriter, Write};
 use std::fs::OpenOptions;
 use std::sync::Arc;
 use std::time::Instant;
-use chrono::Utc;
 use std::thread;
 use num_cpus;
 use crate::managers;
+use crate::assist;
 
 pub fn write_events(chrono: &str, stream: &str, events: Vec<(String, String)>) -> Result<(), Error> {
     if let Err(e) = managers::folders::check::check_folder(chrono) {
@@ -46,10 +46,9 @@ pub fn write_events(chrono: &str, stream: &str, events: Vec<(String, String)>) -
                 }
             };
             let mut buf_writer = BufWriter::with_capacity(8192, file);
-            for (header, body) in events[start..end].iter() {
-                let time = Utc::now();
-                let combined = format!("{} {} {}\n", time, body, header);
-                if let Err(e) = buf_writer.write_all(combined.as_bytes()) {
+            for (tag, entry) in events[start..end].iter() {
+                let stamp: u128 = assist::time::get_current_time(true);
+                if let Err(e) = buf_writer.write_all(format!("{} {} {}\n", stamp, tag, entry).as_bytes()) {
                     eprintln!("Failed to write to buffer: {:?}", e);
                     return Err(e);
                 }

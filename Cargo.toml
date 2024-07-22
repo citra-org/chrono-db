@@ -1,5 +1,5 @@
 [package]
-name = "data_storage"
+name = "intellilog_database"
 version = "0.1.0"
 edition = "2021"
 

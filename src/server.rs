@@ -74,19 +74,20 @@ fn handle_client(mut stream: TcpStream) -> Result<(), Box<dyn std::error::Error 
             "e" => {
                 println!("Ending connection with client.");
                 break;
-            }
-            "g" => ops::generate::generate_user().map(|_| "User generated".to_string()),
-            "c" => ops::create::create_record("hehe.itlg").map(|_| "Record created".to_string()),
+            },
+            "ck" => ops::create::keeper::create_keeper(Some(parts[2])),
+            "cc" => ops::create::chrono::create_chrono(Some(parts[2])),
+            "cs" => ops::create::stream::create_stream(Some(parts[2])),
             "w" => {
                 println!("writing..");
                 let chunks: Vec<(String, String)> = parts[1..].chunks(2)
                     .map(|chunk| (chunk[0].to_string(), chunk[1].to_string()))
                     .collect();
-                ops::write::write_record("hehe.itlg", chunks).map(|_| "Record written".to_string())
+                ops::write::write::write_record("hehe.itlg", chunks).map(|_| "Record written".to_string())
             }
             "r" => {
                 println!("reading..");
-                ops::read::read_records("hehe.itlg").map(|data| format!("{}", data))
+                ops::read::read::read_records("hehe.itlg").map(|data| format!("{}", data))
             }
             _ => Err(Box::new(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,

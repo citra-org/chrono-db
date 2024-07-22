@@ -1,11 +1,10 @@
 use std::fs::{self};
-use std::io::ErrorKind;
+use std::io::Result;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::error::Error;
 use rand::Rng;
 
-const DEFAULT_USER: &str = "admin";
+const DEFAULT_KEEPER: &str = "admin";
 const CONFIG_FILE_PATH: &str = "~/.itlg/config";
 
 fn expand_tilde(path: &str) -> PathBuf {
@@ -29,7 +28,7 @@ fn generate_random_password(length: usize) -> String {
         .collect()
 }
 
-pub fn generate_user() -> Result<(), Box<dyn Error + Send + Sync>> {
+pub fn create_keeper(keeper: Option<&str>) -> Result<()> {
     let config_path = expand_tilde(CONFIG_FILE_PATH);
 
     if let Some(parent) = config_path.parent() {
@@ -38,19 +37,23 @@ pub fn generate_user() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let content = match fs::read_to_string(&config_path) {
         Ok(content) => content,
-        Err(ref e) if e.kind() == ErrorKind::NotFound => String::new(),
-        Err(e) => return Err(Box::new(e)),
+        Err(e) => {
+            eprintln!("Error reading file: {}", e);
+            String::new()
+        },
     };
+    
 
     if content.trim().is_empty() {
-        let user = DEFAULT_USER;
+        let user = keeper.unwrap_or(DEFAULT_KEEPER);
         let password = generate_random_password(16);
-        let new_content = format!("{}:{}", user, password);
+
+        let new_keeper = format!("{}:{}", user, password);
         
-        fs::write(&config_path, new_content)?;
+        fs::write(&config_path, new_keeper)?;
 
         let mut permissions = fs::metadata(&config_path)?.permissions();
-        permissions.set_mode(0o400); // read-only permission
+        permissions.set_mode(0o400);
         fs::set_permissions(&config_path, permissions)?;
 
         println!("New credentials created");

@@ -16,7 +16,7 @@ pub fn handle_command(stream: &mut TcpStream, received: &str, chrono: &str) -> R
             Ok("Connection ended".to_string())
         }
         "ck" => ops::create::keeper::create_keeper(Some(parts[2])).map(|_| "Keeper created".to_string()),
-        "cc" => ops::create::chrono::create_chrono(Some(chrono)).map(|_| "Chrono created".to_string()),
+        "cc" => ops::create::chrono::create_chrono(Some(chrono)).map(|_| "OK".to_string()),
         "cs" => ops::create::stream::create_stream(Some(parts[2])).map(|_| "Stream created".to_string()),
         "w" => ops::write::write::write_events(
             "chrono", 
@@ -43,5 +43,4 @@ pub fn handle_command(stream: &mut TcpStream, received: &str, chrono: &str) -> R
             Err(Box::new(e))
         }
     }
-
 }

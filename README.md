@@ -1,5 +1,5 @@
-# IntelliLog-Database
-Database for IntelliLog Open Source Project 
+# chrono db
+A Time series Database made for citra open source org 
 
 
 # Docs

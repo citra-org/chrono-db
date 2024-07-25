@@ -9,9 +9,8 @@ pub fn read_events(stream: &str) -> Result<String, Error> {
         let line = line?;
         let mut parts = line.splitn(3, ' ');
         if let (Some(stamp), Some(tag), Some(entry)) = (parts.next(), parts.next(), parts.next()) {
-            // events.push_str(&format!("{} {} {}&/n", stamp, tag, entry));
-            //TODO: fix this to send lines instead of lines as string
-            events.push_str("sample");
+            events.push_str(&format!("{} {} {}\n", stamp, tag, entry));
+            // TODO: fix this to send lines instead of lines as string
         } else {
             events.push_str(&format!("Malformed event: {}", line));
         }

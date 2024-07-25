@@ -8,8 +8,7 @@ pub fn run_server(host: &str, port: u16, chrono:&str, keeper:&str, secret:&str) 
     for stream in listener.incoming() {
         println!("Received incoming connection");
         let stream = stream?;
-        let rsp = client::conn::handle_client(stream, chrono,keeper, secret)?;
-        println!("wadawdaw{:?}", rsp);
+        client::conn::handle_client(stream, chrono,keeper, secret)?;
     }
     Ok(())
 }

@@ -1,8 +1,12 @@
-use std::io::{self, Write, Error, ErrorKind};
-use std::net::TcpStream;
 use crate::ops;
+use std::io::{self, Error, ErrorKind, Write};
+use std::net::TcpStream;
 
-pub fn handle_command(stream: &mut TcpStream, received: &str, chrono: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+pub fn handle_command(
+    stream: &mut TcpStream,
+    received: &str,
+    chrono: &str,
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let parts: Vec<&str> = received.split_whitespace().collect();
     if parts.is_empty() {
         let response_str = "Error: Empty command\n";
@@ -13,20 +17,25 @@ pub fn handle_command(stream: &mut TcpStream, received: &str, chrono: &str) -> R
     let response = match parts[0] {
         "e" => {
             println!("Ending connection with client.");
-            Ok("Connection ended".to_string())
+            Ok("OK".to_string())
         }
-        "ck" => ops::create::keeper::create_keeper(Some(parts[2])).map(|_| "Keeper created".to_string()),
+        // "ck" => ops::create::keeper::create_keeper(Some(parts[1])).map(|_| "Keeper created".to_string()),
         "cc" => ops::create::chrono::create_chrono(Some(chrono)).map(|_| "OK".to_string()),
-        "cs" => ops::create::stream::create_stream(Some(parts[2])).map(|_| "Stream created".to_string()),
+        "cs" => ops::create::stream::create_stream(chrono, parts[1]).map(|_| "OK".to_string()),
         "w" => ops::write::write::write_events(
-            "chrono", 
-            "stream", 
-            parts[1..].chunks(2).map(|chunk| (chunk[0].to_string(), chunk[1].to_string())).collect()
-        ).map(|_| "Events written".to_string()),
-        "r" => ops::read::read::read_events("hehe.itlg").map(|data| format!("{}", data)),
+            chrono,
+            parts[1],
+            parts[2..]
+                .chunks(2)
+                .map(|chunk| (chunk[0].to_string(), chunk[1].to_string()))
+                .collect(),
+        )
+        .map(|_| "OK".to_string()),
+        "r" => ops::read::read::read_events(chrono, parts[1]).map(|data| format!("{}", data)),
+        "ds" => ops::delete::delete::delete_stream(chrono, parts[1]).map(|_| "OK".to_string()),
         _ => Err(Error::new(
             ErrorKind::InvalidInput,
-            format!("Unknown command: {}", parts[0])
+            format!("Unknown command: {}", parts[0]),
         )),
     };
 
@@ -35,7 +44,6 @@ pub fn handle_command(stream: &mut TcpStream, received: &str, chrono: &str) -> R
             println!("resp {}", response_str);
             stream.write_all(response_str.as_bytes())?;
             Ok(response_str)
-
         }
         Err(e) => {
             let error_str = format!("Error: {}\n", e);

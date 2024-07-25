@@ -1,6 +1,6 @@
 use std::fs;
-use std::path::Path;
 use std::io::Result;
+use std::path::Path;
 
 pub fn create_folder(foldername: &str, overwrite: bool) -> Result<()> {
     let path = Path::new(foldername);

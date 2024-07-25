@@ -1,5 +1,5 @@
-use std::path::Path;
 use std::io::Result;
+use std::path::Path;
 
 pub fn check_file(path: &str) -> Result<()> {
     let path = Path::new(path);

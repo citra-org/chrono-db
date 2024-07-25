@@ -41,7 +41,6 @@ pub fn handle_client(
         let received = String::from_utf8_lossy(&buffer[..n]);
         println!("Received command: {}", received);
 
-       managers::command::command::handle_command(&mut stream, &received, chrono)?;
-       
+        managers::command::command::handle_command(&mut stream, &received, chrono)?;
     }
 }

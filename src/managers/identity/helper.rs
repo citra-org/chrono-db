@@ -4,7 +4,10 @@ use std::io::{BufRead, BufReader};
 
 const CONFIG_FILE_PATH: &str = "~/.itlg/config";
 
-pub fn validate_credentials_helper(keeper: &str, secret: &str) -> Result<bool,Box<dyn std::error::Error + Send + Sync>> {
+pub fn validate_credentials_helper(
+    keeper: &str,
+    secret: &str,
+) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
     let config_path = assist::path::normalize_path(CONFIG_FILE_PATH);
     let file = File::open(&config_path)?;
 

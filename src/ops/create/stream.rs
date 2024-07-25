@@ -1,13 +1,11 @@
 use crate::managers;
 use std::io::Result;
 
-pub fn create_stream(keeper: Option<&str>) -> Result<()> {
-    let name = keeper.unwrap_or("default");
-    
-    match managers::files::create::create_file("data/default",name, false){
-        Ok(_) => println!("chrono '{}' created or exists", name),
-        Err(e) => eprintln!("error creating chrono '{}': {}", name, e),
+pub fn create_stream(chrono: &str, stream: &str) -> Result<()> {
+    match managers::files::create::create_file(chrono, &(stream.to_string() + ".itlg"), false) {
+        Ok(_) => println!("stream '{}' created or exists", stream),
+        Err(e) => eprintln!("error creating stream '{}': {}", stream, e),
     }
-    
+
     Ok(())
 }

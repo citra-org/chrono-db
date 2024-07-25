@@ -1,29 +1,34 @@
-use std::io::{Error,ErrorKind, BufWriter, Write};
-use std::fs::OpenOptions;
-use std::sync::Arc;
-use std::time::Instant;
-use std::thread;
-use num_cpus;
-use crate::managers;
 use crate::assist;
+use crate::managers;
+use num_cpus;
+use std::fs::OpenOptions;
+use std::io::{BufWriter, Error, ErrorKind, Write};
+use std::sync::Arc;
+use std::thread;
+use std::time::Instant;
 
-pub fn write_events(chrono: &str, stream: &str, events: Vec<(String, String)>) -> Result<(), Error> {
+pub fn write_events(
+    chrono: &str,
+    stream: &str,
+    events: Vec<(String, String)>,
+) -> Result<(), Error> {
     if let Err(e) = managers::folders::check::check_folder(chrono) {
         eprintln!("Failed to check folder: {}", e);
         return Err(Error::new(ErrorKind::Other, "Failed to check folder"));
     }
-    
-    if let Err(e) = managers::files::check::check_file(stream) {
+
+    let start_time = Instant::now();
+    let events = Arc::new(events);
+    let file_path = format!("{}/{}.itlg", chrono, stream).to_string();
+    let file_path = Arc::new(file_path);
+    if let Err(e) = managers::files::check::check_file(&file_path) {
         eprintln!("Failed to check file: {}", e);
         return Err(Error::new(ErrorKind::Other, "Failed to check file"));
     }
-    
-    let start_time = Instant::now();
-    let file_path = Arc::new(stream.to_string());
-    let events = Arc::new(events);
+
     let num_cpus = num_cpus::get();
     let events_per_thread = (events.len() + num_cpus - 1) / num_cpus;
-    
+
     let mut handles = vec![];
     for i in 0..num_cpus {
         let file_path = file_path.clone();
@@ -31,14 +36,12 @@ pub fn write_events(chrono: &str, stream: &str, events: Vec<(String, String)>) -
         let handle = thread::spawn(move || -> Result<(), Error> {
             let start = i * events_per_thread;
             let end = std::cmp::min((i + 1) * events_per_thread, events.len());
-            
+
             if start >= events.len() {
                 return Ok(());
             }
-            
-            let file = match OpenOptions::new()
-                .append(true)
-                .open(&*file_path) {
+
+            let file = match OpenOptions::new().append(true).open(&*file_path) {
                 Ok(f) => f,
                 Err(e) => {
                     eprintln!("Failed to open file: {:?}", e);
@@ -48,7 +51,9 @@ pub fn write_events(chrono: &str, stream: &str, events: Vec<(String, String)>) -
             let mut buf_writer = BufWriter::with_capacity(8192, file);
             for (tag, entry) in events[start..end].iter() {
                 let stamp: u128 = assist::time::get_current_time(true);
-                if let Err(e) = buf_writer.write_all(format!("{} {} {}\n", stamp, tag, entry).as_bytes()) {
+                if let Err(e) =
+                    buf_writer.write_all(format!("{} {} {}\n", stamp, tag, entry).as_bytes())
+                {
                     eprintln!("Failed to write to buffer: {:?}", e);
                     return Err(e);
                 }
@@ -61,17 +66,20 @@ pub fn write_events(chrono: &str, stream: &str, events: Vec<(String, String)>) -
         });
         handles.push(handle);
     }
-    
+
     for handle in handles {
         if let Err(e) = handle.join().unwrap() {
             return Err(e);
         }
     }
-    
+
     let duration = start_time.elapsed();
     println!("CPU's: {}", num_cpus);
     println!("Time taken: {:?}", duration);
     println!("Events written: {}", events.len());
-    println!("Write speed: {} events/second", events.len() as f64 / duration.as_secs_f64());
+    println!(
+        "Write speed: {} events/second",
+        events.len() as f64 / duration.as_secs_f64()
+    );
     Ok(())
 }

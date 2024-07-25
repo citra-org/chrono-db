@@ -1,8 +1,8 @@
 target
-Cargo.lock
+test
+**.lock
 **.itlg
 **.itlgs
-test
-check.py
-check.sh
-*.txt
+**.py
+**.sh
+**.txt

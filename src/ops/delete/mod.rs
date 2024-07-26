@@ -1,1 +1,1 @@
-pub mod delete;
+pub mod stream;

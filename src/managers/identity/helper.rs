@@ -9,7 +9,7 @@ pub fn validate_credentials_helper(
     secret: &str,
 ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
     let config_path = assist::path::normalize_path(CONFIG_FILE_PATH);
-    let file = File::open(&config_path)?;
+    let file = File::open(config_path)?;
 
     let lines = BufReader::new(file).lines();
     for line in lines {

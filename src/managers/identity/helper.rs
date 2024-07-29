@@ -2,13 +2,13 @@ use crate::assist;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-const CONFIG_FILE_PATH: &str = "~/.itlg/config";
-
 pub fn validate_credentials_helper(
+    chrono: &str,
     keeper: &str,
     secret: &str,
 ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
-    let config_path = assist::path::normalize_path(CONFIG_FILE_PATH);
+    let config_file_path: &str = &format!("~/.itlg/{}/config", chrono);
+    let config_path = assist::path::normalize_path(config_file_path);
     let file = File::open(config_path)?;
 
     let lines = BufReader::new(file).lines();

@@ -4,11 +4,11 @@ use std::io::Result;
 use std::os::unix::fs::PermissionsExt;
 
 const DEFAULT_KEEPER: &str = "admin";
-const CONFIG_FILE_PATH: &str = "~/.itlg/config";
 
-pub fn create_keeper(keeper: Option<&str>) -> Result<()> {
-    let config_path = assist::path::normalize_path(CONFIG_FILE_PATH);
-
+pub fn create_keeper(chrono:&str,keeper: Option<&str>) -> Result<()> {
+    let config_file_path:&str = &format!("~/.itlg/{}/config",chrono);
+    let config_path = assist::path::normalize_path(config_file_path);
+ 
     if let Some(parent) = config_path.parent() {
         fs::create_dir_all(parent)?;
     }
@@ -26,7 +26,7 @@ pub fn create_keeper(keeper: Option<&str>) -> Result<()> {
         let password = assist::password::generate_random_password(16);
 
         let new_keeper = format!("{}:{}", user, password);
-
+        //TODO: change this flow & str
         fs::write(&config_path, new_keeper)?;
 
         let mut permissions = fs::metadata(&config_path)?.permissions();

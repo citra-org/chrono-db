@@ -4,7 +4,7 @@ use std::io::Result;
 use std::path::Path;
 
 pub fn create_file(path: &str, filename: &str, overwrite: bool) -> Result<()> {
-    managers::folders::check::check_folder(path)?;
+    managers::folders::check::check_folder(path, true);
     let full_path = Path::new(path).join(filename);
 
     if full_path.exists() {

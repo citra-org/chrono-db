@@ -1,13 +1,13 @@
-use crate::{ops, server};
+use crate::{managers, ops, server};
 use std::env;
 use std::io::Result;
 use std::path::Path;
 
 fn print_usage() {
     println!("Usage:");
-    println!("  init <database name> <username>");
-    println!("  start <database name>");
-    println!("  stop <database name>");
+    println!("  init <chrono> <keeper>");
+    println!("  start <chrono>");
+    println!("  stop <chrono>");
 }
 
 pub fn initializer() -> Result<()> {
@@ -29,16 +29,16 @@ pub fn initializer() -> Result<()> {
         }
         "start" => {
             let chrono = &args[2];
-            let path = Path::new(chrono);
-
-            if !path.exists() {
-                eprintln!("Chrono Doesnt exsist");
+            if let Err(e) = managers::folders::check::check_folder(chrono, true) {
+                eprintln!("Chrono doesn't exist: {}", e);
             } else {
                 println!("Starting server for database: {}", chrono);
-                let _ = server::tcp::run_server(chrono).map_err(|e| {
+                if let Err(e) = server::tcp::run_server(chrono).map_err(|e| {
                     eprintln!("Error running server: {:?}", e);
                     e
-                });
+                }) {
+                    eprintln!("Server failed: {}", e);
+                }
             }
         }
         "stop" => {

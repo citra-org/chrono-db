@@ -2,18 +2,19 @@ use crate::assist;
 use std::fs::{self};
 use std::io::Result;
 use std::os::unix::fs::PermissionsExt;
+use std::path::{Path, PathBuf};
 
 const DEFAULT_KEEPER: &str = "admin";
 
 pub fn create_keeper(chrono: &str, keeper: Option<&str>) -> Result<()> {
-    let config_file_path: &str = &format!("~/.citra/{}/chrono_config", chrono);
-    let config_path = assist::path::normalize_path(config_file_path);
+    let full_path: &str = &format!("/home/kali/.citra/chrono/{}/config",chrono);
+    let dir_path = std::path::Path::new(&full_path).parent().unwrap();
 
-    if let Some(parent) = config_path.parent() {
-        fs::create_dir_all(parent)?;
-    }
+    fs::create_dir_all(dir_path)?;
+    fs::File::create(full_path)?;
 
-    let content = match fs::read_to_string(&config_path) {
+
+    let content = match fs::read_to_string(&full_path) {
         Ok(content) => content,
         Err(e) => {
             eprintln!("Error reading file: {}", e);
@@ -26,17 +27,17 @@ pub fn create_keeper(chrono: &str, keeper: Option<&str>) -> Result<()> {
         let password = assist::password::generate_random_password(16);
 
         let new_keeper = format!("{}:{}", user, password);
-        //TODO: change this flow & str
-        fs::write(&config_path, new_keeper)?;
+        fs::write(&full_path, new_keeper)?;
 
-        let mut permissions = fs::metadata(&config_path)?.permissions();
-        permissions.set_mode(0o400);
-        fs::set_permissions(&config_path, permissions)?;
+        let mut permissions = fs::metadata(&full_path)?.permissions();
+        permissions.set_mode(0o444); // Changed to read permission for all users
+        fs::set_permissions(&full_path, permissions)?;
 
         println!("New credentials created");
     } else {
         println!("Credentials already exist");
     }
+
 
     Ok(())
 }

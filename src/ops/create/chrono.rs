@@ -3,10 +3,13 @@ use std::io::Result;
 
 pub fn create_chrono(keeper: Option<&str>) -> Result<()> {
     let name = keeper.unwrap_or("default");
+    let base_path = "/var/lib/citra/chrono"; 
 
-    match managers::folders::create::create_folder(name, false) {
-        Ok(_) => println!("chrono '{}' created or exists", name),
-        Err(e) => eprintln!("error creating chrono '{}': {}", name, e),
+    let full_path = format!("{}/{}", base_path, name);
+
+    match managers::folders::create::create_folder(&full_path) {
+        Ok(_) => println!("Chrono '{}' created or exists at {:?}", name, full_path),
+        Err(e) => eprintln!("Error creating Chrono '{}': {}", name, e),
     }
 
     Ok(())

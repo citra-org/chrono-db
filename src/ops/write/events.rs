@@ -12,7 +12,7 @@ pub fn write_events(
     stream: &str,
     events: Vec<(String, String)>,
 ) -> Result<(), Error> {
-    if let Err(e) = managers::folders::check::check_folder(chrono) {
+    if let Err(e) = managers::folders::check::check_folder(chrono, true) {
         eprintln!("Failed to check folder: {}", e);
         return Err(Error::new(ErrorKind::Other, "Failed to check folder"));
     }
@@ -21,7 +21,7 @@ pub fn write_events(
     let events = Arc::new(events);
     let file_path = format!("{}/{}.chrono", chrono, stream).to_string();
     let file_path = Arc::new(file_path);
-    if let Err(e) = managers::files::check::check_file(&file_path) {
+    if let Err(e) = managers::files::check::check_file(&file_path, true) {
         eprintln!("Failed to check file: {}", e);
         return Err(Error::new(ErrorKind::Other, "Failed to check file"));
     }

@@ -7,9 +7,8 @@ pub fn validate_credentials_helper(
     keeper: &str,
     secret: &str,
 ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
-    let config_file_path: &str = &format!("~/.citra/{}/chrono_config", chrono);
-    let config_path = assist::path::normalize_path(config_file_path);
-    let file = File::open(config_path)?;
+    let config_file_path: &str = &format!("/home/kali/.citra/chrono/{}/config", chrono);
+    let file = File::open(config_file_path)?;
 
     let lines = BufReader::new(file).lines();
     for line in lines {

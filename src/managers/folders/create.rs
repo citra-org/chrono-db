@@ -1,22 +1,12 @@
 use std::fs;
 use std::io::Result;
-use std::path::Path;
+use std::path::PathBuf;
 
-pub fn create_folder(foldername: &str, overwrite: bool) -> Result<()> {
-    let path = Path::new(foldername);
+pub fn create_folder(folder: &str) -> Result<()> {
+    let base_path = PathBuf::from(folder);
 
-    if path.exists() {
-        if overwrite {
-            fs::remove_dir_all(path)?;
-            println!("existing folder removed");
-        } else {
-            println!("folder already exists");
-            return Ok(());
-        }
-    }
-
-    fs::create_dir(path)?;
-    println!("folder created successfully");
+    fs::create_dir_all(&base_path)?;
+    println!("Folder created successfully at {:?}", base_path);
 
     Ok(())
 }

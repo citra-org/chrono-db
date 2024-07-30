@@ -5,10 +5,10 @@ use std::os::unix::fs::PermissionsExt;
 
 const DEFAULT_KEEPER: &str = "admin";
 
-pub fn create_keeper(chrono:&str,keeper: Option<&str>) -> Result<()> {
-    let config_file_path:&str = &format!("~/.itlg/{}/config",chrono);
+pub fn create_keeper(chrono: &str, keeper: Option<&str>) -> Result<()> {
+    let config_file_path: &str = &format!("~/.itlg/{}/config", chrono);
     let config_path = assist::path::normalize_path(config_file_path);
- 
+
     if let Some(parent) = config_path.parent() {
         fs::create_dir_all(parent)?;
     }

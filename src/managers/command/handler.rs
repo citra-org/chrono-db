@@ -13,7 +13,7 @@ pub fn handle_command(
         stream.write_all(response_str.as_bytes())?;
         return Ok(response_str.to_string());
     }
-    println!("{:?}",parts[0]);
+    println!("{:?}", parts[0]);
     let response = match parts[0] {
         "e" => {
             println!("Ending connection with client.");

@@ -1,8 +1,7 @@
 use crate::managers;
+use std::cmp;
 use std::io::{Read, Write};
 use std::net::TcpStream;
-use std::cmp;
-
 
 pub fn handle_client(
     mut stream: TcpStream,
@@ -22,7 +21,7 @@ pub fn handle_client(
     let received = String::from_utf8_lossy(&buffer[..n]);
     println!("Received credentials: {}", received);
 
-    println!(":::{}:::{}",received,chrono);
+    println!(":::{}:::{}", received, chrono);
     let parts: Vec<&str> = received.split_whitespace().collect();
     if parts.len() < 3 {
         let response_str = "Error: Usage: <username> <password> <command>\n";
@@ -47,7 +46,9 @@ pub fn handle_client(
             Ok(n) => {
                 let received = String::from_utf8_lossy(&buffer[..n]);
                 println!("Received command: {}", received);
-                if let Err(e) = managers::command::handler::handle_command(&mut stream, &received, chrono) {
+                if let Err(e) =
+                    managers::command::handler::handle_command(&mut stream, &received, chrono)
+                {
                     eprintln!("Error handling command: {}", e);
                 }
             }
@@ -57,11 +58,10 @@ pub fn handle_client(
             }
         }
     }
-
 }
 
 fn get_optimal_buffer_size() -> usize {
-    const DEFAULT_BUFFER_SIZE: usize = 1024 * 1024; 
+    const DEFAULT_BUFFER_SIZE: usize = 1024 * 1024;
     #[cfg(unix)]
     {
         use libc::{sysconf, _SC_PAGESIZE};

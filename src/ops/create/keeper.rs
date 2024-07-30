@@ -7,12 +7,11 @@ use std::path::{Path, PathBuf};
 const DEFAULT_KEEPER: &str = "admin";
 
 pub fn create_keeper(chrono: &str, keeper: Option<&str>) -> Result<()> {
-    let full_path: &str = &format!("/home/kali/.citra/chrono/{}/config",chrono);
+    let full_path: &str = &format!("/home/kali/.citra/chrono/{}/config", chrono);
     let dir_path = std::path::Path::new(&full_path).parent().unwrap();
 
     fs::create_dir_all(dir_path)?;
     fs::File::create(full_path)?;
-
 
     let content = match fs::read_to_string(&full_path) {
         Ok(content) => content,
@@ -37,7 +36,6 @@ pub fn create_keeper(chrono: &str, keeper: Option<&str>) -> Result<()> {
     } else {
         println!("Credentials already exist");
     }
-
 
     Ok(())
 }

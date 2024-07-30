@@ -3,7 +3,7 @@ use std::io::Result;
 
 pub fn create_chrono(keeper: Option<&str>) -> Result<()> {
     let name = keeper.unwrap_or("default");
-    let base_path = "/var/lib/citra/chrono"; 
+    let base_path = "/var/lib/citra/chrono";
 
     let full_path = format!("{}/{}", base_path, name);
 

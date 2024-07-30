@@ -19,7 +19,7 @@ pub fn write_events(
 
     let start_time = Instant::now();
     let events = Arc::new(events);
-    let file_path = format!("{}/{}.itlg", chrono, stream).to_string();
+    let file_path = format!("{}/{}.chrono", chrono, stream).to_string();
     let file_path = Arc::new(file_path);
     if let Err(e) = managers::files::check::check_file(&file_path) {
         eprintln!("Failed to check file: {}", e);

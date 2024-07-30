@@ -9,11 +9,11 @@ pub struct ConnectionInfo {
     pub chrono: String,
 }
 
-pub fn parse_itlg_uri(uri: &str) -> Result<ConnectionInfo, Box<dyn Error + Send + Sync>> {
-    if !uri.starts_with("itlg://") {
+pub fn parse_chrono_uri(uri: &str) -> Result<ConnectionInfo, Box<dyn Error + Send + Sync>> {
+    if !uri.starts_with("chrono://") {
         return Err(Box::new(IoError::new(
             ErrorKind::InvalidInput,
-            "Invalid scheme. Expected 'itlg'",
+            "Invalid scheme. Expected 'chrono'",
         )));
     }
 

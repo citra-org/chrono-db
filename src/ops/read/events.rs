@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Error};
 
 pub fn read_events(chrono: &str, stream: &str) -> Result<String, Error> {
-    let file = File::open(format!("{}/{}.itlg", chrono, stream).to_string())?;
+    let file = File::open(format!("{}/{}.chrono", chrono, stream).to_string())?;
 
     let streamer = BufReader::new(file);
     let mut events = String::new();

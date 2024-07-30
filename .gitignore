@@ -1,8 +1,8 @@
 target
 test
 **.lock
-**.itlg
-**.itlgs
+**.chrono
+**.citra
 **.py
 **.sh
 **.txt

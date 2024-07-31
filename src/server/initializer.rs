@@ -17,7 +17,6 @@ pub fn initializer() -> Result<()> {
         "init" => {
             let chrono = &args[2];
             let keeper = &args[3];
-            println!("{} ::: {}", keeper, chrono);
             ops::create::keeper::create_keeper(chrono, Some(keeper)).map_err(|e| {
                 eprintln!("Error creating keeper: {}", e);
                 e

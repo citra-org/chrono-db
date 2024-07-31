@@ -19,9 +19,9 @@ pub fn write_events(
 
     let start_time = Instant::now();
     let events = Arc::new(events);
-    let file_path = format!("{}/{}.chrono", chrono, stream).to_string();
+    let file_path = format!("/var/lib/citra/chrono/{}/{}.chrono", chrono, stream).to_string();
     let file_path = Arc::new(file_path);
-    if let Err(e) = managers::files::check::check_file(&file_path, true) {
+    if let Err(e) = managers::f3iles::check::check_file(&file_path, true) {
         eprintln!("Failed to check file: {}", e);
         return Err(Error::new(ErrorKind::Other, "Failed to check file"));
     }

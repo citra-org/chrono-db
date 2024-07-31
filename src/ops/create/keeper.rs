@@ -27,12 +27,12 @@ pub fn create_keeper(chrono: &str, keeper: Option<&str>) -> Result<()> {
 
         let new_keeper = format!("{}:{}", user, password);
         fs::write(&full_path, new_keeper)?;
-
+        
         let mut permissions = fs::metadata(&full_path)?.permissions();
         permissions.set_mode(0o444); // Changed to read permission for all users
         fs::set_permissions(&full_path, permissions)?;
-
-        println!("New credentials created");
+        
+        println!("credentials::{}:{}", user, password);
     } else {
         println!("Credentials already exist");
     }

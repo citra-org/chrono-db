@@ -21,7 +21,6 @@ pub fn handle_client(
     let received = String::from_utf8_lossy(&buffer[..n]);
     println!("Received credentials: {}", received);
 
-    println!(":::{}:::{}", received, chrono);
     let parts: Vec<&str> = received.split_whitespace().collect();
     if parts.len() < 3 {
         let response_str = "Error: Usage: <username> <password> <command>\n";

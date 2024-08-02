@@ -2,7 +2,6 @@ use crate::assist;
 use std::fs::{self};
 use std::io::Result;
 use std::os::unix::fs::PermissionsExt;
-use std::path::{Path, PathBuf};
 
 const DEFAULT_KEEPER: &str = "admin";
 

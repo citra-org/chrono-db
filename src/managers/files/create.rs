@@ -1,12 +1,10 @@
-use libc::printf;
-
 use crate::managers;
 use std::fs;
 use std::io::Result;
 use std::path::{Path,PathBuf};
 
 pub fn create_file(path: &str, filename: &str, is_root: bool) -> Result<()> {
-    managers::folders::check::check_folder(path, is_root);
+    managers::folders::check::check_folder(path, is_root)?;
     let full_path: PathBuf;
     if is_root {
         let initial_path = Path::new("/var/lib/citra/chrono");

@@ -41,7 +41,6 @@ pub fn handle_command(
 
     match response {
         Ok(response_str) => {
-            println!("resp {}", response_str);
             stream.write_all(response_str.as_bytes())?;
             Ok(response_str)
         }

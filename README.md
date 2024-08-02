@@ -1,27 +1,73 @@
-# IntelliLog-Database
-Database for IntelliLog Open Source Project 
+# chrono db
+A Time series Database built on Rust to handle Petabyte Scale Data
 
+**Introducing SALT**
+
+- Scalability
+- Adaptability
+- Low Latency
+- Throughput
+
+By Integrating this principle, We aim to create a faster and cheaper database with latest technology that can meet the demand of the future applications.
+
+# Goal
+
+- Build the next gen fastest timeseries database
+- Push the limits to 100+ Million Events / second on avg spec machine
+- High Scalability & Throughput with minimum cost & latency
+- Design to store huge data with millions of events concurrently
+- True Low code development for more optimization & control
+- Develop a simple protocol & storage engine
 
 # Docs
 
-- We are storing all the data in ```.itlg``` custom file format made for IntelliLog Project, Pronounce as "It Log"
-
 ### Usage
-- ```cargo build``` for building
-- ```cargo run <db name> c``` for creating db
-- ```cargo run <db name> w "header" "body"``` for writing
-- ```cargo run <db name> r``` for reading
+- ```cargo run init <db name> <keeper>``` for creating chrono db
+- ```cargo run start <db name>``` for starting chrono db
 
-### Note
-- Data Format ```TIME HEADER BODY```
-- The project is still under development, The above are subjected to change
+- copy the creds printed & connect with the [golang driver](https://github.com/citra-org/chrono-db-go-driver) for using chrono db
 
-### TO DO
+If you get any issues, try with sudo/admin access, for further issues, reachout on the community sever
+
+### Info
+
+- KEEPER is admin/user/database manager
+- EVENTS are the time based records stored with header & body
+- STREAM is collection of events, which can in traditional databased called table
+- CHRONO is the database itself which is collection of streams
+
+
+- Event Format ```TIME HEADER BODY```
+- Data is being stored in ```/var/lib/citra/chrono```
+- Credentials are being stored in ```~/.citra/chrono```
+
+### ToDo
+
 - Encryption & Decryption of file
 - Read filters & queries
-- Validation for write
-- etc for later
+- Better Impl for data storage & streaming data
+- Parser & Validation for write
+- Concurrency & I/O Optimizations
+- Impl of B'Trees & hash for files
+- Impl of time based binary search for searching
+- Indexer, Sharding, testing and much more
+
+### Architecture
+
+To be announced soon....
+
+### Benchmark
+
+To be announced soon....
+
+---
+
+**THIS DATABASE IS STILL UNDER DEV, HAS LOT OF BUGS & IMPROVEMENTS TO BE DONE**
+
+**FEEL FREE TO OPEN A ISSUES & GET YOUR PR MERGED **
+
+---
 
 ### Contributors
 
-**Creator/Founder**: Sugam Kuber ([Github](https://github.com/sugamkuber)) ([LinkedIn](https://linkedin.com/in/sugamkuber))
+**Creator**: Sugam Kuber ([Github](https://github.com/sugamkuber)) ([LinkedIn](https://linkedin.com/in/sugamkuber))

@@ -1,8 +1,9 @@
 target
-Cargo.lock
-**.itlg
-**.itlgs
 test
-check.py
-check.sh
-result.txt
+**.lock
+**.chrono
+**.citra
+**.py
+**.sh
+**.txt
+**.ini

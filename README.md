@@ -27,7 +27,9 @@ By Integrating this principle, We aim to create a faster and cheaper database wi
 
 - copy the creds printed & connect with the [golang driver](https://github.com/citra-org/chrono-db-go-driver) for using chrono db
 
-If you get any issues, try with sudo/admin access, for further issues, reachout on the community sever
+If you get any issues, try with sudo/admin access, for further issues, reachout on the community server.
+
+We will be soon releasing download support for linux systems.
 
 ### Info
 
@@ -60,11 +62,15 @@ To be announced soon....
 
 To be announced soon....
 
+### Package
+
+To be published soon....
+
 ---
 
 **THIS DATABASE IS STILL UNDER DEV, HAS LOT OF BUGS & IMPROVEMENTS TO BE DONE**
 
-**FEEL FREE TO OPEN A ISSUES & GET YOUR PR MERGED **
+**FEEL FREE TO OPEN A ISSUES & GET YOUR PR MERGED**
 
 ---
 

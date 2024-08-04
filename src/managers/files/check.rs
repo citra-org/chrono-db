@@ -1,5 +1,6 @@
 use std::io::Result;
 use std::path::{Path, PathBuf};
+use crate::constants::error;
 
 pub fn check_file(file: &str, is_root: bool) -> Result<()> {
     let path: PathBuf;
@@ -17,7 +18,7 @@ pub fn check_file(file: &str, is_root: bool) -> Result<()> {
             println!("Path '{}' exists but is not a file.", path.display());
         }
     } else {
-        println!("Path '{}' does not exist.", path.display());
+        return error::file::NOT_FOUND;
     }
 
     Ok(())

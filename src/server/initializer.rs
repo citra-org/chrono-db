@@ -1,4 +1,4 @@
-use crate::{managers, ops, server};
+use crate::{managers, ops, server, validate};
 use std::env;
 use std::io::Result;
 
@@ -31,12 +31,15 @@ pub fn initializer() -> Result<()> {
                 eprintln!("Chrono doesn't exist: {}", e);
             } else {
                 println!("Starting server for database: {}", chrono);
-                if let Err(e) = server::tcp::run_server(chrono).map_err(|e| {
-                    eprintln!("Error running server: {:?}", e);
-                    e
-                }) {
-                    eprintln!("Server failed: {}", e);
-                }
+                
+
+                    if let Err(e) = server::tcp::run_server(chrono).map_err(|e| {
+                        eprintln!("Error running server: {:?}", e);
+                        e
+                    }) {
+                        eprintln!("Server failed: {}", e);
+                    }
+                
             }
         }
         "stop" => {

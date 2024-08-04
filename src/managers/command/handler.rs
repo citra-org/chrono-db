@@ -1,4 +1,4 @@
-use crate::ops;
+use crate::{ops,validate};
 use std::io::{Error, ErrorKind, Write};
 use std::net::TcpStream;
 
@@ -13,6 +13,7 @@ pub fn handle_command(
         stream.write_all(response_str.as_bytes())?;
         return Ok(response_str.to_string());
     }
+
     println!("{:?}", parts[0]);
     let response = match parts[0] {
         "e" => {

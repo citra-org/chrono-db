@@ -1,4 +1,4 @@
-use crate::ops;
+use crate::{managers, ops};
 use std::io::{Error, ErrorKind, Write};
 use std::net::TcpStream;
 
@@ -7,36 +7,72 @@ pub fn handle_command(
     received: &str,
     chrono: &str,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let parts: Vec<&str> = received.split_whitespace().collect();
+    let parts: Vec<&str> = if received.starts_with("INSERT") {
+        let split_parts: Vec<&str> = received.split_whitespace().collect();
+        let middle_body_start = split_parts[0].len();
+        let middle_body_end = received.len()
+            - (split_parts[split_parts.len() - 2].len()
+                + split_parts[split_parts.len() - 1].len()
+                + 2);
+        let middle_body = &received[middle_body_start..middle_body_end].trim();
+        vec![
+            split_parts[0],
+            middle_body,
+            split_parts[split_parts.len() - 2],
+            split_parts[split_parts.len() - 1],
+        ]
+    } else {
+        received.split_whitespace().collect()
+    };
+
     if parts.is_empty() {
         let response_str = "Error: Empty command\n";
         stream.write_all(response_str.as_bytes())?;
         return Ok(response_str.to_string());
     }
-    println!("{:?}", parts[0]);
-    let response = match parts[0] {
-        "e" => {
-            println!("Ending connection with client.");
-            Ok("OK".to_string())
-        }
-        // "ck" => ops::create::keeper::create_keeper(Some(parts[1])).map(|_| "Keeper created".to_string()),
-        "cc" => ops::create::chrono::create_chrono(Some(chrono)).map(|_| "OK".to_string()),
-        "cs" => ops::create::stream::create_stream(chrono, parts[1]).map(|_| "OK".to_string()),
-        "w" => ops::write::events::write_events(
-            chrono,
-            parts[1],
-            parts[2..]
-                .chunks(2)
-                .map(|chunk| (chunk[0].to_string(), chunk[1].to_string()))
-                .collect(),
-        )
-        .map(|_| "OK".to_string()),
-        "r" => ops::read::events::read_events(chrono, parts[1]).map(|data| format!("{}", data)),
-        "ds" => ops::delete::stream::delete_stream(chrono, parts[1]).map(|_| "OK".to_string()),
-        _ => Err(Error::new(
+    if !managers::validate::command::validate_commands(parts.clone()) {
+        let error_str = "Error: Invalid command format\n";
+        stream.write_all(error_str.as_bytes())?;
+        return Err(Box::new(Error::new(
             ErrorKind::InvalidInput,
-            format!("Unknown command: {}", parts[0]),
-        )),
+            "Invalid command format",
+        )) as Box<dyn std::error::Error + Send + Sync>);
+    }
+
+    let response = match parts.as_slice() {
+        ["INSERT", data, "INTO", stream_name] => {
+            let data = data.trim_matches(|c| c == '{' || c == '}');
+            let events: Vec<(&str, &str)> = data
+                .split("), (")
+                .map(|s| s.trim_matches(|c| c == '(' || c == ')'))
+                .map(|s| {
+                    let parts: Vec<&str> = s.split(", ").collect();
+                    (parts[0].trim_matches('"'), parts[1].trim_matches('"'))
+                })
+                .collect();
+            ops::write::events::write_events(
+                chrono,
+                stream_name,
+                events
+                    .into_iter()
+                    .map(|(header, body)| (header.to_string(), body.to_string()))
+                    .collect(),
+            )
+            .map(|_| "OK".to_string())
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+        }
+        ["SELECT", "*", "FROM", stream_name] => ops::read::events::read_events(chrono, stream_name)
+            .map(|data| format!("{}", data))
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>),
+        ["CREATE", "STREAM", stream_name] => {
+            ops::create::stream::create_stream(chrono, stream_name)
+                .map(|_| "OK".to_string())
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+        }
+        _ => Err(
+            Box::new(Error::new(ErrorKind::InvalidInput, "Unknown command"))
+                as Box<dyn std::error::Error + Send + Sync>,
+        ),
     };
 
     match response {
@@ -47,7 +83,7 @@ pub fn handle_command(
         Err(e) => {
             let error_str = format!("Error: {}\n", e);
             stream.write_all(error_str.as_bytes())?;
-            Err(Box::new(e))
+            Err(e)
         }
     }
 }

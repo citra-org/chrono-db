@@ -21,8 +21,6 @@ pub fn run_server(chrono: &str) -> Result<(), Box<dyn std::error::Error + Send +
         .get("PORT")
         .ok_or("PORT not found in 'CHRONO_DB' section")?;
 
-    println!("Starting server on {}:{}", chrono_host, chrono_port);
-
     let listener = TcpListener::bind(format!("{}:{}", chrono_host, chrono_port))?;
     println!("Server listening on {}:{}", chrono_host, chrono_port);
     for stream in listener.incoming() {

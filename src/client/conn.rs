@@ -44,7 +44,7 @@ pub fn handle_client(
             }
             Ok(n) => {
                 let received = String::from_utf8_lossy(&buffer[..n]);
-                println!("Received command: {}", received);
+                println!("Received command");
                 if let Err(e) =
                     managers::command::handler::handle_command(&mut stream, &received, chrono)
                 {

@@ -68,12 +68,12 @@ pub fn write_events(
     let duration = start_time.elapsed();
     let events_length = *events_length.lock().unwrap();
 
-    println!("Time taken: {:?}", duration);
-    println!("Events written: {}", events_length);
-    println!(
-        "Written : {} events/second",
-        (events_length as f64 / duration.as_secs_f64()) as i64
-    );
+    // println!("Time taken: {:?}", duration);
+    // println!("Events written: {}", events_length);
+    // println!(
+    //     "Written : {} events/second",
+    //     (events_length as f64 / duration.as_secs_f64()) as i64
+    // );
 
     Ok(())
 }

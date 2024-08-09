@@ -30,7 +30,7 @@ pub fn handle_command(
         stream.write_all(response_str.as_bytes())?;
         return Ok(response_str.to_string());
     }
-    if !managers::validate::command::validate_commands(parts.clone()) {
+    if !managers::validate::command::validate_commands(chrono, parts.clone()) {
         let error_str = "Error: Invalid command format\n";
         stream.write_all(error_str.as_bytes())?;
         return Err(Box::new(Error::new(
@@ -41,15 +41,19 @@ pub fn handle_command(
 
     let response = match parts.as_slice() {
         ["INSERT", data, "INTO", stream_name] => {
-            let data = data.trim_matches(|c| c == '{' || c == '}');
-            let events: Vec<(&str, &str)> = data
-                .split("), (")
-                .map(|s| s.trim_matches(|c| c == '(' || c == ')'))
-                .map(|s| {
-                    let parts: Vec<&str> = s.split(", ").collect();
-                    (parts[0].trim_matches('"'), parts[1].trim_matches('"'))
+            let pairs_str = data.trim_matches(|c| c == '{' || c == '}').split("),(");
+
+            let events: Vec<(String, String)> = pairs_str
+                .map(|pair| {
+                    let pair = pair.trim_matches(|c| c == '(' || c == ')');
+                    let mut iter = pair
+                        .split(',')
+                        .map(|s| s.trim().trim_matches('"').to_string());
+                    (iter.next().unwrap(), iter.next().unwrap())
                 })
                 .collect();
+
+            println!("{:?}::events", events);
             ops::write::events::write_events(
                 chrono,
                 stream_name,

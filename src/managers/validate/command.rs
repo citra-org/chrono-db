@@ -2,13 +2,13 @@ use crate::managers;
 use regex::Regex;
 use std::sync::Arc;
 
-pub fn validate_commands(parts: Vec<&str>) -> bool {
+pub fn validate_commands(chrono: &str, parts: Vec<&str>) -> bool {
     match parts.as_slice() {
         ["INSERT", event, "INTO", stream] => {
-            is_stream_valid(&stream.to_lowercase()) && is_event_valid(event)
+            is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase()) && is_event_valid(event)
         }
         ["SELECT", "*", "FROM", stream] => {
-            is_stream_valid(&stream.to_lowercase())
+            is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase())
             // | ["SELECT", value, "FROM", stream]
             // (value == "*" || (value.starts_with('"') && value.ends_with('"')))
         }
@@ -17,8 +17,8 @@ pub fn validate_commands(parts: Vec<&str>) -> bool {
     }
 }
 
-fn is_stream_valid(name: &str) -> bool {
-    is_stream_name_valid(name) && is_stream_exists(name)
+fn is_stream_valid(chrono: &str, stream: &str) -> bool {
+    is_stream_name_valid(stream) && is_stream_exists(chrono, stream)
 }
 
 fn is_stream_name_valid(name: &str) -> bool {
@@ -34,10 +34,10 @@ fn is_stream_name_valid(name: &str) -> bool {
         && !name.ends_with('_')
 }
 
-fn is_stream_exists(name: &str) -> bool {
+fn is_stream_exists(chrono: &str, stream: &str) -> bool {
     let file_path = Arc::new(format!(
         "/var/lib/citra/chrono/{}/{}.chrono",
-        "chrono", name
+        chrono, stream
     ));
     match managers::files::check::check_file(&file_path, true) {
         Ok(_) => true,

@@ -20,10 +20,10 @@ pub fn write_events(
         "/var/lib/citra/chrono/{}/{}.chrono",
         chrono, stream
     ));
-    if let Err(e) = managers::files::check::check_file(&file_path, true) {
-        eprintln!("Failed to check file: {}", e);
-        return Err(Error::new(ErrorKind::Other, "Failed to check file"));
-    }
+    // if let Err(e) = managers::files::check::check_file(&file_path, true) {
+    //     eprintln!("Failed to check file: {}", e);
+    //     return Err(Error::new(ErrorKind::Other, "Failed to check file"));
+    // }
     let events_length = Arc::new(Mutex::new(0));
     let mut handles = vec![];
 

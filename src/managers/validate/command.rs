@@ -2,15 +2,22 @@ use crate::managers;
 use regex::Regex;
 use std::sync::Arc;
 
-pub fn validate_commands(chrono: &str, parts: Vec<&str>) -> bool {
+pub fn validate_commands(chrono: &str, input: &str) -> bool {
+    let parts: Vec<&str> = input.splitn(5, |c| c == ' ').collect();
+    
     match parts.as_slice() {
-        ["INSERT", event, "INTO", stream] => {
-            is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase()) && is_event_valid(event)
+        ["INSERT", "INTO", stream, "VALUES", event] => {
+            let trimmed_event = if event.ends_with("\n\n") {
+                &event[..event.len() - 2]
+            } else if event.ends_with('\n') {
+                &event[..event.len() - 1]
+            } else {
+                event
+            };
+            is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase()) && is_event_valid(trimmed_event)
         }
         ["SELECT", "*", "FROM", stream] => {
             is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase())
-            // | ["SELECT", value, "FROM", stream]
-            // (value == "*" || (value.starts_with('"') && value.ends_with('"')))
         }
         ["CREATE", "STREAM", stream] => is_stream_name_valid(&stream.to_lowercase()),
         _ => false,
@@ -45,12 +52,28 @@ fn is_stream_exists(chrono: &str, stream: &str) -> bool {
     }
 }
 fn is_event_valid(event: &str) -> bool {
-    let single_tuple_pattern = r#"\(\s*"\w+"\s*,\s*"\w+"\s*\)"#;
-    let multiple_tuples_pattern =
-        r#"\{\s*(\(\s*"\w+"\s*,\s*"\w+"\s*\)\s*,\s*)*\(\s*"\w+"\s*,\s*"\w+"\s*\)\s*\}"#;
+    println!("event: {:#?}", event);
+    
+    let pattern = r"^\(\'.+?\'\, \'.+?\'\)(\, \(\'.+?\'\, \'.+?\'\))*$";
+    let re = Regex::new(pattern).unwrap();
 
-    let single_tuple_regex = Regex::new(single_tuple_pattern).unwrap();
-    let multiple_tuples_regex = Regex::new(multiple_tuples_pattern).unwrap();
+    println!("re.is_match: {:#?}", re.is_match(event));
+    println!("is_balanced_parentheses: {:#?}", is_balanced_parentheses(event));
+    return re.is_match(event) && is_balanced_parentheses(event);
+}
 
-    single_tuple_regex.is_match(event) || multiple_tuples_regex.is_match(event)
+fn is_balanced_parentheses(event: &str) -> bool {
+    let mut stack = Vec::new();
+    for e in event.chars() {
+        match e {
+            '(' => stack.push(e),
+            ')' => {
+                if stack.pop().is_none() {
+                    return false;
+                }
+            }
+            _ => {}
+        }
+    }
+    stack.is_empty()
 }

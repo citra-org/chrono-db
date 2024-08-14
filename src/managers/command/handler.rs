@@ -7,6 +7,18 @@ pub fn handle_command(
     received: &str,
     chrono: &str,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    // INSERT INTO stream VALUES ('header1', 'body1'), ('header2', 'body2'), ('header3', 'body3')
+    // INSERT INTO stream VALUES ('header1', 'body1')
+    
+    if !managers::validate::command::validate_commands(chrono, received) {
+        let error_str = "Error: Invalid command format\n";
+        stream.write_all(error_str.as_bytes())?;
+        return Err(Box::new(Error::new(
+            ErrorKind::InvalidInput,
+            "Invalid command format",
+        )) as Box<dyn std::error::Error + Send + Sync>);
+    }
+
     let parts: Vec<&str> = if received.starts_with("INSERT") {
         let split_parts: Vec<&str> = received.split_whitespace().collect();
         let middle_body_start = split_parts[0].len();
@@ -29,14 +41,6 @@ pub fn handle_command(
         let response_str = "Error: Empty command\n";
         stream.write_all(response_str.as_bytes())?;
         return Ok(response_str.to_string());
-    }
-    if !managers::validate::command::validate_commands(chrono, parts.clone()) {
-        let error_str = "Error: Invalid command format\n";
-        stream.write_all(error_str.as_bytes())?;
-        return Err(Box::new(Error::new(
-            ErrorKind::InvalidInput,
-            "Invalid command format",
-        )) as Box<dyn std::error::Error + Send + Sync>);
     }
 
     let response = match parts.as_slice() {

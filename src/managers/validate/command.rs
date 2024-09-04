@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 pub fn validate_commands(chrono: &str, input: &str) -> bool {
     let parts: Vec<&str> = input.splitn(5, |c| c == ' ').collect();
-    
+
     match parts.as_slice() {
         ["INSERT", "INTO", stream, "VALUES", event] => {
             let trimmed_event = if event.ends_with("\n\n") {
@@ -14,7 +14,8 @@ pub fn validate_commands(chrono: &str, input: &str) -> bool {
             } else {
                 event
             };
-            is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase()) && is_event_valid(trimmed_event)
+            is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase())
+                && is_event_valid(trimmed_event)
         }
         ["SELECT", "*", "FROM", stream] => {
             is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase())
@@ -53,12 +54,15 @@ fn is_stream_exists(chrono: &str, stream: &str) -> bool {
 }
 fn is_event_valid(event: &str) -> bool {
     println!("event: {:#?}", event);
-    
+
     let pattern = r"^\(\'.+?\'\, \'.+?\'\)(\, \(\'.+?\'\, \'.+?\'\))*$";
     let re = Regex::new(pattern).unwrap();
 
     println!("re.is_match: {:#?}", re.is_match(event));
-    println!("is_balanced_parentheses: {:#?}", is_balanced_parentheses(event));
+    println!(
+        "is_balanced_parentheses: {:#?}",
+        is_balanced_parentheses(event)
+    );
     return re.is_match(event) && is_balanced_parentheses(event);
 }
 

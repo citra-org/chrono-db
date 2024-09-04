@@ -9,7 +9,7 @@ pub fn handle_command(
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     // INSERT INTO stream VALUES ('header1', 'body1'), ('header2', 'body2'), ('header3', 'body3')
     // INSERT INTO stream VALUES ('header1', 'body1')
-    
+
     if !managers::validate::command::validate_commands(chrono, received) {
         let error_str = "Error: Invalid command format\n";
         stream.write_all(error_str.as_bytes())?;
@@ -42,10 +42,14 @@ pub fn handle_command(
         stream.write_all(response_str.as_bytes())?;
         return Ok(response_str.to_string());
     }
+    println!("【 parts 】==> {:?}", parts);
 
     let response = match parts.as_slice() {
-        ["INSERT", data, "INTO", stream_name] => {
+        ["INSERT", "INTO", stream_name, "VALUES", data] => {
+            println!("【 data 】==> {:?}", data);
+
             let pairs_str = data.trim_matches(|c| c == '{' || c == '}').split("),(");
+            println!("【 pairs_str 】==> {:?}", pairs_str);
 
             let events: Vec<(String, String)> = pairs_str
                 .map(|pair| {
@@ -57,7 +61,7 @@ pub fn handle_command(
                 })
                 .collect();
 
-            println!("{:?}::events", events);
+            println!("【 events 】==> {:?}", events);
             ops::write::events::write_events(
                 chrono,
                 stream_name,
@@ -72,6 +76,7 @@ pub fn handle_command(
         ["SELECT", "*", "FROM", stream_name] => ops::read::events::read_events(chrono, stream_name)
             .map(|data| format!("{}", data))
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>),
+        ["PING"] => Ok(String::from("PONG")),
         ["CREATE", "STREAM", stream_name] => {
             ops::create::stream::create_stream(chrono, stream_name)
                 .map(|_| "OK".to_string())

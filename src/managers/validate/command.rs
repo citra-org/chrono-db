@@ -21,6 +21,7 @@ pub fn validate_commands(chrono: &str, input: &str) -> bool {
             is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase())
         }
         ["CREATE", "STREAM", stream] => is_stream_name_valid(&stream.to_lowercase()),
+        ["PING"] => true,
         _ => false,
     }
 }

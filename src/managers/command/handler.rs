@@ -7,9 +7,6 @@ pub fn handle_command(
     received: &str,
     chrono: &str,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    // INSERT INTO stream VALUES ('header1', 'body1'), ('header2', 'body2'), ('header3', 'body3')
-    // INSERT INTO stream VALUES ('header1', 'body1')
-
     if !managers::validate::command::validate_commands(chrono, received) {
         let error_str = "Error: Invalid command format\n";
         stream.write_all(error_str.as_bytes())?;
@@ -18,24 +15,21 @@ pub fn handle_command(
             "Invalid command format",
         )) as Box<dyn std::error::Error + Send + Sync>);
     }
+    let mut parts = Vec::new();
 
-    let parts: Vec<&str> = if received.starts_with("INSERT") {
-        let split_parts: Vec<&str> = received.split_whitespace().collect();
-        let middle_body_start = split_parts[0].len();
-        let middle_body_end = received.len()
-            - (split_parts[split_parts.len() - 2].len()
-                + split_parts[split_parts.len() - 1].len()
-                + 2);
-        let middle_body = &received[middle_body_start..middle_body_end].trim();
-        vec![
-            split_parts[0],
-            middle_body,
-            split_parts[split_parts.len() - 2],
-            split_parts[split_parts.len() - 1],
-        ]
+    if received.starts_with("INSERT") {
+        let mut split = received.split_whitespace();
+
+        parts.extend(split.by_ref().take(4));
+
+        if let Some(part4) = parts.get(3) {
+            let rest_start = received.find(part4).unwrap() + part4.len();
+            let rest = &received[rest_start..].trim();
+            parts.push(rest);
+        }
     } else {
-        received.split_whitespace().collect()
-    };
+        parts.extend(received.split_whitespace());
+    }
 
     if parts.is_empty() {
         let response_str = "Error: Empty command\n";

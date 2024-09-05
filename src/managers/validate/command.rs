@@ -3,23 +3,15 @@ use regex::Regex;
 use std::sync::Arc;
 
 pub fn validate_commands(chrono: &str, input: &str) -> bool {
-    let parts: Vec<&str> = input.splitn(5, |c| c == ' ').collect();
+    let trimmed_input = input.trim_end_matches('\n').trim_end_matches("\n\n");
+    let parts: Vec<&str> = trimmed_input.splitn(5, |c| c == ' ').collect();
+    let chrono_lower = chrono.to_lowercase();
 
     match parts.as_slice() {
         ["INSERT", "INTO", stream, "VALUES", event] => {
-            let trimmed_event = if event.ends_with("\n\n") {
-                &event[..event.len() - 2]
-            } else if event.ends_with('\n') {
-                &event[..event.len() - 1]
-            } else {
-                event
-            };
-            is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase())
-                && is_event_valid(trimmed_event)
+            is_stream_valid(&chrono_lower, &stream.to_lowercase()) && is_event_valid(event)
         }
-        ["SELECT", "*", "FROM", stream] => {
-            is_stream_valid(&chrono.to_lowercase(), &stream.to_lowercase())
-        }
+        ["SELECT", "*", "FROM", stream] => is_stream_valid(&chrono_lower, &stream.to_lowercase()),
         ["CREATE", "STREAM", stream] => is_stream_name_valid(&stream.to_lowercase()),
         ["PING"] => true,
         _ => false,

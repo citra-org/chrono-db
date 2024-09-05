@@ -7,6 +7,7 @@ pub fn handle_command(
     received: &str,
     chrono: &str,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    println!("【 received 】==> {:?}", received);
     if !managers::validate::command::validate_commands(chrono, received) {
         let error_str = "Error: Invalid command format\n";
         stream.write_all(error_str.as_bytes())?;
@@ -42,30 +43,18 @@ pub fn handle_command(
         ["INSERT", "INTO", stream_name, "VALUES", data] => {
             println!("【 data 】==> {:?}", data);
 
-            let pairs_str = data.trim_matches(|c| c == '{' || c == '}').split("),(");
-            println!("【 pairs_str 】==> {:?}", pairs_str);
+            let converted = data
+                .trim_matches(|c| c == '(' || c == ')')
+                .replace('\'', "")
+                .split("), (")
+                .map(|s| s.split(", ").collect::<Vec<&str>>())
+                .map(|v| (v[0].to_string(), v[1].to_string()))
+                .collect::<Vec<(String, String)>>();
 
-            let events: Vec<(String, String)> = pairs_str
-                .map(|pair| {
-                    let pair = pair.trim_matches(|c| c == '(' || c == ')');
-                    let mut iter = pair
-                        .split(',')
-                        .map(|s| s.trim().trim_matches('"').to_string());
-                    (iter.next().unwrap(), iter.next().unwrap())
-                })
-                .collect();
-
-            println!("【 events 】==> {:?}", events);
-            ops::write::events::write_events(
-                chrono,
-                stream_name,
-                events
-                    .into_iter()
-                    .map(|(header, body)| (header.to_string(), body.to_string()))
-                    .collect(),
-            )
-            .map(|_| "OK".to_string())
-            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+            println!("【 converted 】==> {:?}", converted);
+            ops::write::events::write_events(chrono, stream_name, converted)
+                .map(|_| "OK".to_string())
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
         }
         ["SELECT", "*", "FROM", stream_name] => ops::read::events::read_events(chrono, stream_name)
             .map(|data| format!("{}", data))
